@@ -85,9 +85,9 @@ export class BagsService {
   }
 
   async checkApiKey(): Promise<string> {
-    const data = await fetch(`https://api.guildwars2.com/v2/tokeninfo?access_token=${this.apiKey}`);
+    const data: Promise<TokenInfo> = (await fetch(`https://api.guildwars2.com/v2/tokeninfo?access_token=${this.apiKey}`)).json();
 
-    const permissions: string[] = (await data.json()).permissions ?? [];
+    const permissions: string[] = (await data).permissions ?? [];
 
     var missingRequirements: string[] = [];
 
