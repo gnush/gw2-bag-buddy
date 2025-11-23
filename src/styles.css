@@ -1,1 +1,15 @@
-/* You can add global styles to this file, and also import other style files */
+/* * {
+  margin: 0;
+  padding: 0;
+} */
+
+/* body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+} */
+
+:root {
+  --primary-color: #e65c00;
+  --secondary-color: #ff944d;
+  --accent-color: #e8e7fa;
+  --shadow-color: #E8E8E8;
+}
