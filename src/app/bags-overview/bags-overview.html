@@ -1,9 +1,9 @@
 <section>
-  <form [formGroup]="apiKeyForm" (submit)="applyApiKey(apikey.value)">
+  <form [formGroup]="apiKeyForm" (ngSubmit)="applyApiKey()">
     <!-- <button (click)="toggleApiKeyInfo()">&#8505;</button> TODO: excempt from submit, without moving out of form (forces newline) -->
     <span class="button" (click)="toggleApiKeyInfo()">&#8505;</span>
-    <input type="text" placeholder="API Key" #apikey />
-    <button type="submit" class="button">Apply</button>
+    <input type="text" placeholder="API Key" formControlName="apiKey"/>
+    <button type="submit" class="button" [disabled]="!apiKeyForm.valid">Apply</button>
   </form>
   @if(showApiKeyInfo) {
     <p>

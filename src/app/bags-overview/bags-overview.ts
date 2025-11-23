@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-bags-overview',
@@ -14,12 +14,12 @@ export class BagsOverview {
   apiKeyPermissions = ['account','characters', 'inventories'];
 
   apiKeyForm = new FormGroup({
-    apiKey: new FormControl('')
+    apiKey: new FormControl('', Validators.required)
   });
 
-  applyApiKey(key: string) {
+  applyApiKey() {
     alert('not yet implemented');
-    console.log(key);
+    console.log(`Entered api key: '${this.apiKeyForm.value.apiKey}'`);
   }
 
   toggleApiKeyInfo() {

@@ -22,6 +22,11 @@ input[type="text"] {
   border-radius: 8px;
 }
 
+.button:disabled {
+  border: solid 1px var(--secondary-color);
+  background: var(--secondary-color);
+}
+
 .permission {
   margin-left: 8px;
 }
