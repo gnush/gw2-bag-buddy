@@ -1,6 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CharacterInfo, MyCharacterInfo } from '../characterInfo';
 import { BagsService } from '../bags.service';
 
 @Component({
@@ -12,18 +11,20 @@ import { BagsService } from '../bags.service';
 export class BagsOverview {
   showApiKeyInfo = false;
 
-  // https://wiki.guildwars2.com/wiki/API:Main
-  apiKeyPermissions = ['account','characters', 'inventories'];
-
   apiKeyForm = new FormGroup({
     apiKey: new FormControl('', Validators.required)
   });
 
   bagsService = inject(BagsService);
 
+  tokenInfo: WritableSignal<string> = signal('');
+
   applyApiKey() {
-    alert('not yet implemented');
-    console.log(`Entered api key: '${this.apiKeyForm.value.apiKey}'`);
+    this.bagsService.setApiKey(this.apiKeyForm.value.apiKey ?? '');
+    
+    this.bagsService.checkApiKey().then((s) => {
+      this.tokenInfo.set(s);
+    });
   }
 
   toggleApiKeyInfo() {

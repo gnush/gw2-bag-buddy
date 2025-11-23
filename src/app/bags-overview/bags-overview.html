@@ -8,11 +8,14 @@
   @if(showApiKeyInfo) {
     <p>
       Required permissions:
-      @for(permission of apiKeyPermissions; track $index) {
+      @for(permission of bagsService.requiredApiKeyPermissions; track $index) {
         <span class="permission">{{permission}}</span>
       }
     </p>
   }
+  <p>
+    {{ tokenInfo() }}
+  </p>
 </section>
 <section>
   <table>
