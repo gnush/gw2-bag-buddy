@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CharacterInfo, MyCharacterInfo } from '../characterInfo';
+import { BagsService } from '../bags.service';
 
 @Component({
   selector: 'app-bags-overview',
@@ -16,6 +18,8 @@ export class BagsOverview {
   apiKeyForm = new FormGroup({
     apiKey: new FormControl('', Validators.required)
   });
+
+  bagsService = inject(BagsService);
 
   applyApiKey() {
     alert('not yet implemented');

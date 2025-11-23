@@ -14,3 +14,23 @@
     </p>
   }
 </section>
+<section>
+  <table>
+    <tr>
+      <th>Character</th>
+      <th>Used Slots</th>
+      <th>Equipped Bags</th>
+    </tr>
+    @for(character of bagsService.allCharacters(); track $index) {
+      <tr>
+        <td>{{ character.name }}</td>
+        <td>{{ character.usedInventorySlots() }} / {{ character.totalInventorySlots() }}</td>
+        <td>
+          @for(bag of character.equippedBags; track $index) {
+            {{ bag.name }}
+          }
+        </td>
+      </tr>
+    }
+  </table>
+</section>
