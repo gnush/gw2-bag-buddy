@@ -19,11 +19,17 @@ export class BagsOverview {
 
   tokenInfo: WritableSignal<string> = signal('');
 
+  constructor() {
+    this.apiKeyForm.setValue({apiKey: localStorage.getItem('apiKey') ?? ''});
+    this.applyApiKey();
+  }
+
   applyApiKey() {
-    this.bagsService.setApiKey(this.apiKeyForm.value.apiKey ?? '');
-    
-    this.bagsService.checkApiKey().then((s) => {
-      this.tokenInfo.set(s);
+    this.bagsService.setApiKey(this.apiKeyForm.value.apiKey ?? '').then(permissions => {
+      if (permissions.length !== 0)
+        this.tokenInfo.set(`missing '${permissions}'`);
+      else
+        this.tokenInfo.set(`api key valid`);
     });
   }
 

@@ -80,14 +80,26 @@ export class BagsService {
     return this.characters;
   }
 
-  setApiKey(apiKey: string) {
-    this.apiKey = apiKey;
+  /**
+   * Sets a new api key
+   * @param apiKey the new api key
+   * @returns The missing permissions of the supplied api key
+   */
+  async setApiKey(apiKey: string): Promise<string[]> {
+    const missingPermissions = await this.validateAccessToken(apiKey);
+
+    if (missingPermissions.length === 0) {
+      this.apiKey = apiKey;
+      localStorage.setItem('apiKey', apiKey);
+    }
+
+    return missingPermissions;
   }
 
-  async checkApiKey(): Promise<string> {
-    const data: Promise<TokenInfo> = (await fetch(`https://api.guildwars2.com/v2/tokeninfo?access_token=${this.apiKey}`)).json();
+  private async validateAccessToken(apiKey: string): Promise<string[]> {
+    const data: Promise<TokenInfo> = (await fetch(`https://api.guildwars2.com/v2/tokeninfo?access_token=${apiKey}`)).json();
 
-    const permissions: string[] = (await data).permissions ?? [];
+    const permissions = (await data).permissions ?? [];
 
     var missingRequirements: string[] = [];
 
@@ -96,12 +108,7 @@ export class BagsService {
         missingRequirements.push(permission);
     });
 
-    if (missingRequirements.length === 0)
-      return 'All requirements met';
-    else if (missingRequirements.length === 1)
-      return `Missing '${missingRequirements}' permsission`;
-    else
-      return `Missing '${missingRequirements}' permsissions`;
+    return missingRequirements;
   }
 }
 
