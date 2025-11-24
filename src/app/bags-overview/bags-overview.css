@@ -30,3 +30,10 @@ input[type="text"] {
 .permission {
   margin-left: 8px;
 }
+
+.permissionMissing {
+  margin-left: 8px;
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: red;
+}

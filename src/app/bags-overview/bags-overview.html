@@ -9,13 +9,14 @@
     <p>
       Required permissions:
       @for(permission of bagsService.requiredApiKeyPermissions; track $index) {
-        <span class="permission">{{permission}}</span>
+        @if(missingPermissions().includes(permission)) {
+          <span class="permissionMissing">{{permission}}</span>
+        } @else {
+          <span class="permission">{{permission}}</span>
+        }
       }
     </p>
   }
-  <p>
-    {{ tokenInfo() }}
-  </p>
 </section>
 <section>
   <table>

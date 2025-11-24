@@ -5,10 +5,13 @@ import { CharacterInfo, MyCharacterInfo } from './characterInfo';
   providedIn: 'root',
 })
 export class BagsService {
-  private apiKey: string = '';
-
   // https://wiki.guildwars2.com/wiki/API:Main
   public requiredApiKeyPermissions = ['account','characters', 'inventories'];
+
+  private apiKey: TokenInfo = {
+    accessToken: '',
+    permissions: []
+  };
 
   // bags of chars (including char inventories)
   // https://wiki.guildwars2.com/wiki/API:2/characters
@@ -80,27 +83,30 @@ export class BagsService {
     return this.characters;
   }
 
+  // TODO: check gw2 api for character inventories/bags
+
   /**
-   * Sets a new api key
-   * @param apiKey the new api key
-   * @returns The missing permissions of the supplied api key
+   * Sets a new access token to the GW2 api
+   * @param accessToken the new access token for the GW2 api
+   * @returns The missing permissions of the supplied access token
    */
-  async setApiKey(apiKey: string): Promise<string[]> {
-    const missingPermissions = await this.validateAccessToken(apiKey);
+  async setGW2ApiAccessToken(accessToken: string): Promise<string[]> {
+    const data: Promise<{permissions: string[]}> = (await fetch(`https://api.guildwars2.com/v2/tokeninfo?access_token=${accessToken}`)).json();
+    const permissions = (await data).permissions ?? [];
+    const missingPermissions = await this.validatePermissions(permissions);
 
     if (missingPermissions.length === 0) {
-      this.apiKey = apiKey;
-      localStorage.setItem('apiKey', apiKey);
+      this.apiKey = {
+        accessToken: accessToken,
+        permissions: permissions
+      };
+      localStorage.setItem('apiKey', accessToken);
     }
 
     return missingPermissions;
   }
 
-  private async validateAccessToken(apiKey: string): Promise<string[]> {
-    const data: Promise<TokenInfo> = (await fetch(`https://api.guildwars2.com/v2/tokeninfo?access_token=${apiKey}`)).json();
-
-    const permissions = (await data).permissions ?? [];
-
+  private async validatePermissions(permissions: string[]): Promise<string[]> {
     var missingRequirements: string[] = [];
 
     this.requiredApiKeyPermissions.forEach(permission => {
@@ -110,8 +116,13 @@ export class BagsService {
 
     return missingRequirements;
   }
+
+  private checkAccessTokenPermission(wanted: string[]) {
+    wanted.every(this.apiKey.permissions.includes);
+  }
 }
 
 interface TokenInfo {
+  accessToken: string;
   permissions: string[];
 }

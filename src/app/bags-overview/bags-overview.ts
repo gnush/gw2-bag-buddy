@@ -17,7 +17,7 @@ export class BagsOverview {
 
   bagsService = inject(BagsService);
 
-  tokenInfo: WritableSignal<string> = signal('');
+  missingPermissions: WritableSignal<string[]> = signal(this.bagsService.requiredApiKeyPermissions);
 
   constructor() {
     this.apiKeyForm.setValue({apiKey: localStorage.getItem('apiKey') ?? ''});
@@ -25,12 +25,9 @@ export class BagsOverview {
   }
 
   applyApiKey() {
-    this.bagsService.setApiKey(this.apiKeyForm.value.apiKey ?? '').then(permissions => {
-      if (permissions.length !== 0)
-        this.tokenInfo.set(`missing '${permissions}'`);
-      else
-        this.tokenInfo.set(`api key valid`);
-    });
+    this.bagsService.setGW2ApiAccessToken(this.apiKeyForm.value.apiKey ?? '').then(permissions =>
+      this.missingPermissions.set(permissions)
+    );
   }
 
   toggleApiKeyInfo() {
