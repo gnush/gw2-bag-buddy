@@ -52,3 +52,26 @@ div.bag-row > div {
 .bag-info {
   width: 48px;
 }
+
+table {
+  margin-top: 16px;
+  border-collapse: collapse;
+  width: 70%;
+}
+
+th {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+td, th {
+  padding: 6px;
+}
+
+tr:nth-child(even) {
+  background-color: var(--accent-color);
+}
+
+tr:hover {
+  background-color: var(--shadow-color);
+}
