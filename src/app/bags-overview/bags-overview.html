@@ -54,8 +54,8 @@
       </tbody>
     </table>
   </div>
-  <div>
-    Unused Bags:
+  <div class="unused-bags">
+    <div id="subheader">Available Bags</div>
     <div class="bag-grid">
       @for (bag of bagsService.unusedBags(); track $index) {
         <app-unused-bag-cell [bag]="bag" />
