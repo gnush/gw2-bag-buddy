@@ -36,5 +36,12 @@
         </td>
       </tr>
     }
+    @for(character of chars(); track $index) {
+      <tr>
+        <td>{{character.name}}</td>
+        <td>{{occupiedInventorySlots(character) }} / {{ totalInventorySlots(character)}}</td>
+        <td>{{bags(character)}}</td>
+      </tr>
+    }
   </table>
 </section>

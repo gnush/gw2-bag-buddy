@@ -83,7 +83,15 @@ export class BagsService {
     return this.characters;
   }
 
-  // TODO: check gw2 api for character inventories/bags
+  // TODO: rename (populate from gw2 api or something like that)
+  async foo(): Promise<CharacterInventory[]> {
+    if (this.apiKey.permissions.includes('characters')) {
+      const data = await fetch(`https://api.guildwars2.com/v2/characters?ids=all&access_token=${this.apiKey.accessToken}`);
+      return (await data.json()) ?? [];
+    }
+
+    return [];
+  }
 
   /**
    * Sets a new access token to the GW2 api
@@ -125,4 +133,21 @@ export class BagsService {
 interface TokenInfo {
   accessToken: string;
   permissions: string[];
+}
+
+// TODO: remove export, make the api structure internal and parse into own structure
+export interface CharacterInventory {
+  name: string;
+  profession: string;
+  level: number;
+  bags: {
+    id: number;
+    size: number;
+    inventory: ({
+      id: number;
+      count: number;
+      binding: string;
+      bound_to: string | undefined;
+    } | null)[]
+  }[];
 }
