@@ -16,7 +16,8 @@ export class BagsService {
     permissions: []
   };
 
-  private unusedBags: InventoryBag[] = [];
+  // TODO: export type to interface
+  unusedBags = signal<{bag: InventoryBag; location: string}[]>([]);
 
   // bags of chars (including char inventories)
   // https://wiki.guildwars2.com/wiki/API:2/characters
@@ -28,16 +29,6 @@ export class BagsService {
   // https://wiki.guildwars2.com/wiki/API:2/account/inventory
 
   characters = signal<CharacterInfo[]>([]);
-
-  // TODO: rename (populate from gw2 api or something like that)
-  async foo(): Promise<CharacterInventory[]> {
-    if (this.apiKey.permissions.includes('characters')) {
-      const data = await fetch(`${this.gw2ApiBase}/characters?ids=all&access_token=${this.apiKey.accessToken}`);
-      return (await data.json()) ?? [];
-    }
-
-    return [];
-  }
 
   async populateBagInformation() {
     if (this.apiKey.permissions.includes('characters')) {
@@ -63,13 +54,67 @@ export class BagsService {
     }
   }
 
+  async populateUnusedSharedInventoryBags() {
+    if (this.apiKey.permissions.includes('inventories')) {
+      const sharedInventoryResponse: (SharedInventoryItemResponse|null)[] = await ((await fetch(`${this.gw2ApiBase}/account/inventory?access_token=${this.apiKey.accessToken}`))).json() ?? [];
+      const sharedInventory: SharedInventoryItemResponse[] = sharedInventoryResponse.filter(item => item != null);
+
+      const items: ItemResponse[] = (await this.lookupItemIds(
+        sharedInventory.map(item => item.id)
+      ));
+
+      for (const sharedInventoryItem of sharedInventory) {
+        const itemResponse = items.find(item => item.id === sharedInventoryItem.id);
+        if (itemResponse !== undefined) {
+          const bag = this.itemResponseToInventoryBag(itemResponse, sharedInventoryItem.binding);
+          if (bag != null)
+            this.unusedBags.update(old =>
+              [
+                ...old,
+                {
+                  bag: bag,
+                  location: 'Shared Inventory'
+                }
+              ]
+            );
+        }
+      }
+
+      // loses access to 'binding' of shared inventory item
+      // sharedInventory
+      //   .map(item => items.find(itemResponse => itemResponse.id == item.id))
+      //   .filter(item => item !== undefined)
+      //   .map(item => this.itemResponseToInventoryBag(item, ''))
+      //   .filter(item => item != null)
+      //   .forEach(bag => this.unusedBags.update(old => [
+      //     ...old,
+      //     bag
+      //   ]));
+    }
+  }
+
   private async populateEquippedBags(bags: (BagResponse|null)[], characterName: string): Promise<InventoryBag[]> {
     const actualBags = bags.filter(bag => bag != null);
     const ids = actualBags.map(bag => bag.id);
-
-    const bagInfos: ItemResponse[] = await (await fetch(`${this.gw2ApiBase}/items?ids=${ids}`)).json() ?? [];
+    const bagInfos: ItemResponse[] = await this.lookupItemIds(ids);
 
     return actualBags.map(bag => this.bagResponseToInventoryBag(bag, characterName, bagInfos.find(item => item.id == bag.id)));
+  }
+
+  private itemResponseToInventoryBag(item: ItemResponse, binding: string|undefined): InventoryBag|null {
+    if (item.type !== 'Bag')
+      return null;
+      
+    return {
+      itemId: item.id,
+      name: item.name,
+      desciption: item.description,
+      chatLink: item.chat_link,
+      icon: item.icon,
+      totalSlots: item.details?.size ?? 0,
+      usedSlots: 0,
+      boundTo: binding ?? ''
+    }
   }
 
   private bagResponseToInventoryBag(bag: BagResponse, characterName: string, bagInfo: ItemResponse|undefined): InventoryBag {
@@ -83,6 +128,10 @@ export class BagsService {
       usedSlots: bag.inventory.filter(item => item != null).length,
       boundTo: (bagInfo?.flags.includes('AccountBound') ? 'Account' : characterName)
     }
+  }
+
+  private async lookupItemIds(ids: number[]): Promise<ItemResponse[]> {
+    return await (await fetch(`${this.gw2ApiBase}/items?ids=${ids}`)).json() ?? [];
   }
 
   /**
@@ -122,9 +171,15 @@ export class BagsService {
   }
 }
 
+// GW2 API response structures
 interface TokenInfo {
   accessToken: string;
   permissions: string[];
+}
+
+interface BagDetails {
+  size: number;
+  no_sell_or_sort: boolean;
 }
 
 interface ItemResponse {
@@ -135,25 +190,31 @@ interface ItemResponse {
   chat_link: string;
   icon: string;
   flags: string[];
+  details: BagDetails | undefined;
 }
 
-// TODO: remove export, make the api structure internal and parse into own structure
-export interface Inventory {
+interface Inventory {
   id: number;
   count: number;
   binding: string;
   bound_to: string | undefined;
 }
 
-export interface BagResponse {
+interface BagResponse {
   id: number;
   size: number;
   inventory: (Inventory | null)[]
 }
 
-export interface CharacterInventory {
+interface CharacterInventory {
   name: string;
   profession: string;
   level: number;
   bags: (BagResponse | null)[];
+}
+
+interface SharedInventoryItemResponse {
+  id: number;
+  count: number;
+  binding: string|undefined;
 }

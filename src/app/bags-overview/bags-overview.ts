@@ -1,11 +1,12 @@
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BagsService, CharacterInventory } from '../bags.service';
+import { BagsService} from '../bags.service';
 import { BagCell } from '../bag-cell/bag-cell';
+import { UnusedBagCell } from '../unused-bag-cell/unused-bag-cell';
 
 @Component({
   selector: 'app-bags-overview',
-  imports: [BagCell, ReactiveFormsModule],
+  imports: [BagCell, ReactiveFormsModule, UnusedBagCell],
   templateUrl: './bags-overview.html',
   styleUrl: './bags-overview.css',
 })
@@ -20,8 +21,6 @@ export class BagsOverview {
 
   missingPermissions: WritableSignal<string[]> = signal(this.bagsService.requiredApiKeyPermissions);
 
-  chars: WritableSignal<CharacterInventory[]> = signal([]);
-
   constructor() {
     this.apiKeyForm.setValue({apiKey: localStorage.getItem('apiKey') ?? ''});
     
@@ -32,11 +31,9 @@ export class BagsOverview {
     this.bagsService.setGW2ApiAccessToken(this.apiKeyForm.value.apiKey ?? '').then(permissions => {
       this.missingPermissions.set(permissions);
       
+      // move to bagService
       this.bagsService.populateBagInformation();
-
-      this.bagsService.foo().then(chars => {
-        this.chars.set(chars);
-      });
+      this.bagsService.populateUnusedSharedInventoryBags();
     });
   }
 

@@ -22,34 +22,44 @@
     </p>
   }
 </section>
-<section>
-  <table>
-    <thead>
-      <tr>
-        <th>Character</th>
-        <th>Used Slots</th>
-        <th>Equipped Bags</th>
-        <th>Available Bag Slots</th>
-      </tr>
-    </thead>
-    <tbody>
-      @if(bagsService.characters() == []) {
-        loading character data
-      }
-      @for(character of bagsService.characters(); track $index) {
+<section class="row">
+  <div>
+    <table>
+      <thead>
         <tr>
-          <td>{{ character.name }}</td>
-          <td>{{ character.usedInventorySlots() }} / {{ character.totalInventorySlots() }}</td>
-          <td>
-            <div class="bag-row">
-            @for(bag of character.equippedBags; track $index) {
-              <div class="bag-info"><app-bag-cell [bag]="bag"/></div>
-            }
-            </div>
-          </td>
-          <td>{{ character.emptyBagSlots }}</td>
+          <th>Character</th>
+          <th>Used Slots</th>
+          <th>Equipped Bags</th>
+          <th>Available Bag Slots</th>
         </tr>
+      </thead>
+      <tbody>
+        @if(bagsService.characters() == []) {
+          loading character data
+        }
+        @for(character of bagsService.characters(); track $index) {
+          <tr>
+            <td>{{ character.name }}</td>
+            <td>{{ character.usedInventorySlots() }} / {{ character.totalInventorySlots() }}</td>
+            <td>
+              <div class="bag-row">
+              @for(bag of character.equippedBags; track $index) {
+                <div class="bag-info"><app-bag-cell [bag]="bag"/></div>
+              }
+              </div>
+            </td>
+            <td>{{ character.emptyBagSlots }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div>
+    Unused Bags:
+    <div class="bag-grid">
+      @for (bag of bagsService.unusedBags(); track $index) {
+        <app-unused-bag-cell [bag]="bag" />
       }
-    </tbody>
-  </table>
+    </div>
+  </div>
 </section>

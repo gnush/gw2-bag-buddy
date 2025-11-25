@@ -1,0 +1,17 @@
+<div class="bag">
+  <div>{{bag().bag.name}}</div>
+  <div class="info">
+    <div>
+      <img
+        class="bag-icon"
+        [src]="bag().bag.icon"
+        alt="Icon of {{bag().bag.name}}"
+      />
+    </div>
+    <div class="details">
+      <div>Slots: {{bag().bag.totalSlots}}</div>
+      <div>Binding: {{bag().bag.boundTo}}</div>
+      <div>Location: {{bag().location}}</div>
+    </div>
+  </div>
+</div>

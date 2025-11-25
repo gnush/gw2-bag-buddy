@@ -39,24 +39,29 @@ input[type="text"] {
 }
 
 div.bag-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 div.bag-row > div {
-    margin-left: 6px;
-    margin-right: 6px;
+  margin-left: 6px;
+  margin-right: 6px;
 }
 
 .bag-info {
   width: 48px;
 }
 
-table {
+section.row {
   margin-top: 16px;
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+}
+
+table {
   border-collapse: collapse;
-  width: 70%;
 }
 
 th {
@@ -74,4 +79,12 @@ tr:nth-child(even) {
 
 tr:hover {
   background-color: var(--shadow-color);
+}
+
+.bag-grid {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  column-gap: 24px;
+  row-gap: 12px;
+  justify-content: space-around;
 }
