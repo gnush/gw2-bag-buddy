@@ -7,6 +7,10 @@
   </form>
   @if(showApiKeyInfo) {
     <p>
+      Unsure what an API key is or how to create one?<br>
+      <a href="https://wiki.guildwars2.com/wiki/API:API_key">https://wiki.guildwars2.com/wiki/API:API_key</a>
+    </p>
+    <p>
       Required permissions:
       @for(permission of bagsService.requiredApiKeyPermissions; track $index) {
         @if(missingPermissions().includes(permission)) {
@@ -20,33 +24,32 @@
 </section>
 <section>
   <table>
-    <tr>
-      <th>Character</th>
-      <th>Used Slots</th>
-      <th>Equipped Bags</th>
-      <th>Available Bag Slots</th>
-    </tr>
-    @for(character of bagsService.characters(); track $index) {
+    <thead>
       <tr>
-        <td>{{ character.name }}</td>
-        <td>{{ character.usedInventorySlots() }} / {{ character.totalInventorySlots() }}</td>
-        <td>
-          <div class="bag-row">
-          @for(bag of character.equippedBags; track $index) {
-            <div class="bag-info"><app-bag-cell [bag]="bag"/></div>
-          }
-          </div>
-        </td>
-        <td>{{ character.emptyBagSlots }}</td>
+        <th>Character</th>
+        <th>Used Slots</th>
+        <th>Equipped Bags</th>
+        <th>Available Bag Slots</th>
       </tr>
-    }
-    @for(character of chars(); track $index) {
-      <tr>
-        <td>{{character.name}}</td>
-        <td>{{occupiedInventorySlots(character) }} / {{ totalInventorySlots(character)}}</td>
-        <td>{{bags(character)}}</td>
-        <td>{{emptyBags(character)}}</td>
-      </tr>
-    }
+    </thead>
+    <tbody>
+      @if(bagsService.characters() == []) {
+        loading character data
+      }
+      @for(character of bagsService.characters(); track $index) {
+        <tr>
+          <td>{{ character.name }}</td>
+          <td>{{ character.usedInventorySlots() }} / {{ character.totalInventorySlots() }}</td>
+          <td>
+            <div class="bag-row">
+            @for(bag of character.equippedBags; track $index) {
+              <div class="bag-info"><app-bag-cell [bag]="bag"/></div>
+            }
+            </div>
+          </td>
+          <td>{{ character.emptyBagSlots }}</td>
+        </tr>
+      }
+    </tbody>
   </table>
 </section>

@@ -43,31 +43,4 @@ export class BagsOverview {
   toggleApiKeyInfo() {
     this.showApiKeyInfo = !this.showApiKeyInfo;
   }
-
-  occupied(
-    inventory: ({
-      id: number;
-      count: number;
-      binding: string;
-      bound_to: string | undefined;
-    } | null)[]
-  ): number {
-    return inventory.filter(item => item != null).length;
-  }
-
-  totalInventorySlots(char: CharacterInventory): number {
-    return char.bags.reduce((size, bag) => size + (bag != null ? bag.size : 0), 0);
-  }
-
-  occupiedInventorySlots(char: CharacterInventory): number {
-    return char.bags.reduce((size, bag) => size + (bag != null ? bag.inventory.filter(item => item != null).length : 0), 0);
-  }
-
-  bags(char: CharacterInventory): string {
-    return char.bags.reduceRight((acc, bag) => `${bag != null ? bag.id : ''} ${acc}`, '');
-  }
-
-  emptyBags(char: CharacterInventory): number {
-    return char.bags.filter(bag => bag == null).length;
-  }
 }
