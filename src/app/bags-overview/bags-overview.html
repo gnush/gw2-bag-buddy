@@ -24,16 +24,20 @@
       <th>Character</th>
       <th>Used Slots</th>
       <th>Equipped Bags</th>
+      <th>Available Bag Slots</th>
     </tr>
-    @for(character of bagsService.allCharacters(); track $index) {
+    @for(character of bagsService.characters(); track $index) {
       <tr>
         <td>{{ character.name }}</td>
         <td>{{ character.usedInventorySlots() }} / {{ character.totalInventorySlots() }}</td>
         <td>
+          <div class="bag-row">
           @for(bag of character.equippedBags; track $index) {
-            {{ bag.name }}
+            <div class="bag-info"><app-bag-cell [bag]="bag"/></div>
           }
+          </div>
         </td>
+        <td>{{ character.emptyBagSlots }}</td>
       </tr>
     }
     @for(character of chars(); track $index) {
@@ -41,6 +45,7 @@
         <td>{{character.name}}</td>
         <td>{{occupiedInventorySlots(character) }} / {{ totalInventorySlots(character)}}</td>
         <td>{{bags(character)}}</td>
+        <td>{{emptyBags(character)}}</td>
       </tr>
     }
   </table>

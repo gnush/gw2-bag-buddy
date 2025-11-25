@@ -37,3 +37,18 @@ input[type="text"] {
   text-decoration-thickness: 2px;
   text-decoration-color: red;
 }
+
+div.bag-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+div.bag-row > div {
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.bag-info {
+  width: 48px;
+}

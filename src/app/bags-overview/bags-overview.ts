@@ -1,10 +1,11 @@
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BagsService, CharacterInventory } from '../bags.service';
+import { BagCell } from '../bag-cell/bag-cell';
 
 @Component({
   selector: 'app-bags-overview',
-  imports: [ReactiveFormsModule],
+  imports: [BagCell, ReactiveFormsModule],
   templateUrl: './bags-overview.html',
   styleUrl: './bags-overview.css',
 })
@@ -31,6 +32,8 @@ export class BagsOverview {
     this.bagsService.setGW2ApiAccessToken(this.apiKeyForm.value.apiKey ?? '').then(permissions => {
       this.missingPermissions.set(permissions);
       
+      this.bagsService.populateBagInformation();
+
       this.bagsService.foo().then(chars => {
         this.chars.set(chars);
       });
@@ -39,21 +42,6 @@ export class BagsOverview {
 
   toggleApiKeyInfo() {
     this.showApiKeyInfo = !this.showApiKeyInfo;
-  }
-
-  prettyChars(): string {
-    var res = '';
-
-    this.chars().forEach(char => {
-      res += `${char.name}\n${char.profession} ${char.level}`;
-
-      char.bags.forEach(bag =>
-        bag.inventory.filter(item => item != null).length
-      );
-
-    });
-
-    return res;
   }
 
   occupied(
@@ -76,6 +64,10 @@ export class BagsOverview {
   }
 
   bags(char: CharacterInventory): string {
-    return char.bags.reduceRight((acc, bag) => `${acc} ${bag != null ? bag.id : ''}`, '');
+    return char.bags.reduceRight((acc, bag) => `${bag != null ? bag.id : ''} ${acc}`, '');
+  }
+
+  emptyBags(char: CharacterInventory): number {
+    return char.bags.filter(bag => bag == null).length;
   }
 }

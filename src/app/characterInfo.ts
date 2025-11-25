@@ -1,15 +1,17 @@
 import { InventoryBag } from "./inventoryBag";
 
 export interface CharacterInfo {
-    id: number;
     name: string;
+    profession: string;
+    level: number;
     equippedBags: InventoryBag[];
+    emptyBagSlots: number;
     totalInventorySlots: () => number;
     usedInventorySlots: () => number;
 }
 
 export class MyCharacterInfo implements CharacterInfo {
-    constructor(public id: number, public name: string, public equippedBags: InventoryBag[]) {}
+    constructor(public name: string, public profession: string, public level: number, public equippedBags: InventoryBag[], public emptyBagSlots: number) {}
 
     totalInventorySlots(): number {
         var slots = 0;
