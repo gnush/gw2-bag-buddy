@@ -34,6 +34,7 @@ export class BagsOverview {
       // move to bagService
       this.bagsService.populateBagInformation();
       this.bagsService.populateUnusedSharedInventoryBags();
+      this.bagsService.populateUnusedBankBags();
     });
   }
 

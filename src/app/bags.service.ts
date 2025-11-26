@@ -56,8 +56,8 @@ export class BagsService {
 
   async populateUnusedSharedInventoryBags() {
     if (this.apiKey.permissions.includes('inventories')) {
-      const sharedInventoryResponse: (SharedInventoryItemResponse|null)[] = await ((await fetch(`${this.gw2ApiBase}/account/inventory?access_token=${this.apiKey.accessToken}`))).json() ?? [];
-      const sharedInventory: SharedInventoryItemResponse[] = sharedInventoryResponse.filter(item => item != null);
+      const data: (SharedInventoryItemResponse|null)[] = await ((await fetch(`${this.gw2ApiBase}/account/inventory?access_token=${this.apiKey.accessToken}`))).json() ?? [];
+      const sharedInventory: SharedInventoryItemResponse[] = data.filter(item => item != null);
 
       const items: ItemResponse[] = (await this.lookupItemIds(
         sharedInventory.map(item => item.id)
@@ -90,6 +90,33 @@ export class BagsService {
       //     ...old,
       //     bag
       //   ]));
+    }
+  }
+
+  async populateUnusedBankBags() {
+    if (this.apiKey.permissions.includes('inventories')) {
+      const data: (BankResponse|null)[] = await (await fetch(`${this.gw2ApiBase}/account/bank?access_token=${this.apiKey.accessToken}`)).json() ?? [];
+      const bankContent: BankResponse[] = data.filter(item => item != null);
+
+      const items: ItemResponse[] = await this.lookupItemIds(bankContent.map(item => item.id));
+
+      for (const bankItem of bankContent) {
+        const itemInfo = items.find(item => item.id === bankItem.id);
+
+        if (itemInfo != undefined) {
+          const bag = this.itemResponseToInventoryBag(itemInfo, bankItem.binding);
+          if (bag != null)
+            this.unusedBags.update(old => 
+              [
+                ...old,
+                {
+                  bag: bag,
+                  location: 'Bank'
+                }
+              ]
+            );
+        }
+      }
     }
   }
 
@@ -130,8 +157,27 @@ export class BagsService {
     }
   }
 
+  /**
+   * Fetches item details from the GW2 api
+   * @param ids item ids to lookup
+   * @returns array of details of the requested items
+   */
   private async lookupItemIds(ids: number[]): Promise<ItemResponse[]> {
-    return await (await fetch(`${this.gw2ApiBase}/items?ids=${ids}`)).json() ?? [];
+    // The endpoint is limited to 200 ids at once
+    const limit = 200;
+
+    if (ids.length <= limit) {
+      return await (await fetch(`${this.gw2ApiBase}/items?ids=${ids}`)).json() ?? [];
+    } else {
+      const chunks = [...Array(Math.ceil(ids.length / limit))].map(_ => ids.splice(0, limit));
+      
+      var res: ItemResponse[] = [];
+      for (const chunk of chunks) {
+        res = res.concat(await this.lookupItemIds(chunk));
+      }
+      
+      return res;
+    }
   }
 
   /**
@@ -217,4 +263,11 @@ interface SharedInventoryItemResponse {
   id: number;
   count: number;
   binding: string|undefined;
+}
+
+interface BankResponse {
+  id: number;
+  count: number;
+  binding: string|undefined;
+  bound_to: string|undefined;
 }
