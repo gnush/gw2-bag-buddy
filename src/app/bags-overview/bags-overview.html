@@ -44,7 +44,7 @@
             <td>
               <div class="bag-row">
               @for(bag of character.equippedBags; track $index) {
-                <div class="bag-info"><app-bag-cell [bag]="bag"/></div>
+                <div class="bag-info"><app-equipped-bag [bag]="bag"/></div>
               }
               </div>
             </td>
@@ -58,7 +58,7 @@
     <div id="subheader">Available Bags</div>
     <div class="bag-grid">
       @for (bag of bagsService.unusedBags(); track $index) {
-        <app-unused-bag-cell [bag]="bag" />
+        <app-unused-bag [bag]="bag" />
       }
     </div>
   </div>

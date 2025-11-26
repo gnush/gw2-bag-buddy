@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { UnusedBagCell } from './unused-bag-cell';
+import { EquippedBag } from './equipped-bag';
 
-describe('UnusedBagCell', () => {
-  let component: UnusedBagCell;
-  let fixture: ComponentFixture<UnusedBagCell>;
+describe('EquippedBag', () => {
+  let component: EquippedBag;
+  let fixture: ComponentFixture<EquippedBag>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UnusedBagCell]
+      imports: [EquippedBag]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(UnusedBagCell);
+    fixture = TestBed.createComponent(EquippedBag);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

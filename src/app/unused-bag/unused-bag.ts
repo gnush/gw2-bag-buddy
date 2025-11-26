@@ -2,11 +2,11 @@ import { Component, input } from '@angular/core';
 import { InventoryBag } from '../inventoryBag';
 
 @Component({
-  selector: 'app-unused-bag-cell',
+  selector: 'app-unused-bag',
   imports: [],
-  templateUrl: './unused-bag-cell.html',
-  styleUrl: './unused-bag-cell.css',
+  templateUrl: './unused-bag.html',
+  styleUrl: './unused-bag.css',
 })
-export class UnusedBagCell {
+export class UnusedBag {
   readonly bag = input.required<{bag: InventoryBag; location: string}>();
 }

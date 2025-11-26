@@ -1,12 +1,12 @@
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BagsService} from '../bags.service';
-import { BagCell } from '../bag-cell/bag-cell';
-import { UnusedBagCell } from '../unused-bag-cell/unused-bag-cell';
+import { EquippedBag } from '../equipped-bag/equipped-bag';
+import { UnusedBag } from '../unused-bag/unused-bag';
 
 @Component({
   selector: 'app-bags-overview',
-  imports: [BagCell, ReactiveFormsModule, UnusedBagCell],
+  imports: [EquippedBag, ReactiveFormsModule, UnusedBag],
   templateUrl: './bags-overview.html',
   styleUrl: './bags-overview.css',
 })
