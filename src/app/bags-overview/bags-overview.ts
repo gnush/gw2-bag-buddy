@@ -32,7 +32,7 @@ export class BagsOverview {
       this.missingPermissions.set(permissions);
       
       // move to bagService
-      this.bagsService.populateBagInformation();
+      this.bagsService.populateEquippedCharacterBags();
       this.bagsService.populateUnusedSharedInventoryBags();
       this.bagsService.populateUnusedBankBags();
     });

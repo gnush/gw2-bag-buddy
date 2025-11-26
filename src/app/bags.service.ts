@@ -30,11 +30,19 @@ export class BagsService {
 
   characters = signal<CharacterInfo[]>([]);
 
-  async populateBagInformation() {
+  async populateEquippedCharacterBags() {
     if (this.apiKey.permissions.includes('characters')) {
       const data: Promise<CharacterInventory[]> = (await fetch(`${this.gw2ApiBase}/characters?ids=all&access_token=${this.apiKey.accessToken}`)).json() ?? [];
       const characters: CharacterInventory[] = await data;
-      
+
+      characters.forEach(character =>
+        this.populateUnusedCharacterInventoryBags(
+          character.name,
+          character.bags.flatMap(bag => bag?.inventory)
+                        .filter(item => item != null)
+        )
+      );
+
       for (const character of characters) {
         const bags = await this.populateEquippedBags(character.bags, character.name);
 
@@ -52,6 +60,32 @@ export class BagsService {
         );
       }
     }
+  }
+
+  // TODO: unify unused bag functions
+  private async populateUnusedCharacterInventoryBags(character: string, inventory: Inventory[]) {
+    const itemInfos = await this.lookupItemIds(inventory.map(item => item.id));
+
+    inventory.forEach(inventoryItem => {
+      const info = itemInfos.find(item => item.id === inventoryItem.id);
+      if (info !== undefined) {
+        const bag = this.itemResponseToInventoryBag(
+          info,
+          inventoryItem.binding === 'AccountBound' ? inventoryItem.binding : inventoryItem.bound_to
+        );
+        if (bag != null) {
+          this.unusedBags.update(old =>
+            [
+              ...old,
+              {
+                bag: bag,
+                location: character
+              }
+            ]
+          );
+        }
+      }
+    });
   }
 
   async populateUnusedSharedInventoryBags() {
@@ -104,7 +138,10 @@ export class BagsService {
         const itemInfo = items.find(item => item.id === bankItem.id);
 
         if (itemInfo != undefined) {
-          const bag = this.itemResponseToInventoryBag(itemInfo, bankItem.binding);
+          const bag = this.itemResponseToInventoryBag(
+            itemInfo,
+            bankItem.binding === 'AccountBound' ? bankItem.binding : bankItem.bound_to
+          );
           if (bag != null)
             this.unusedBags.update(old => 
               [
@@ -239,10 +276,11 @@ interface ItemResponse {
   details: BagDetails | undefined;
 }
 
+// rename InventoryItem
 interface Inventory {
   id: number;
   count: number;
-  binding: string;
+  binding: string | undefined;
   bound_to: string | undefined;
 }
 
@@ -265,6 +303,7 @@ interface SharedInventoryItemResponse {
   binding: string|undefined;
 }
 
+// TODO: merge with Inventory
 interface BankResponse {
   id: number;
   count: number;
