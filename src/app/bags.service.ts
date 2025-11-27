@@ -49,8 +49,7 @@ export class BagsService {
               character.name,
               character.profession,
               character.level,
-              bags,
-              character.bags.filter(bag => bag == null).length
+              bags
             )
           ]
         );
@@ -153,12 +152,16 @@ export class BagsService {
     }
   }
 
-  private async populateEquippedBags(bags: (BagResponse|null)[], characterName: string): Promise<InventoryBag[]> {
+  private async populateEquippedBags(bags: (BagResponse|null)[], characterName: string): Promise<(InventoryBag|null)[]> {
     const actualBags = bags.filter(bag => bag != null);
     const ids = actualBags.map(bag => bag.id);
     const bagInfos: ItemResponse[] = await this.lookupItemIds(ids);
 
-    return actualBags.map(bag => this.bagResponseToInventoryBag(bag, characterName, bagInfos.find(item => item.id == bag.id)));
+    return bags.map(bag =>
+      bag !== null ?
+        this.bagResponseToInventoryBag(bag, characterName, bagInfos.find(item => item.id == bag.id)) :
+        null
+    );
   }
 
   private itemResponseToInventoryBag(item: ItemResponse, binding: string|undefined): InventoryBag|null {

@@ -3,11 +3,12 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { BagsService} from '../bags.service';
 import { EquippedBag } from '../equipped-bag/equipped-bag';
 import { UnusedBag } from '../unused-bag/unused-bag';
+import { EmptyBagSlot } from '../empty-bag-slot/empty-bag-slot';
 
 // TODO: split char table and unused bags to new components
 @Component({
   selector: 'app-bags-overview',
-  imports: [EquippedBag, ReactiveFormsModule, UnusedBag],
+  imports: [EmptyBagSlot, EquippedBag, ReactiveFormsModule, UnusedBag],
   templateUrl: './bags-overview.html',
   styleUrl: './bags-overview.css',
 })

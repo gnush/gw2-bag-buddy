@@ -1,0 +1,18 @@
+.bag-icon-placeholder {
+    height: 31px;
+    width: 31px;
+    border: 1px solid;
+    border-radius: 6px;
+    background-color: #c9c9c9;
+}
+
+div.bag {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+div.bag > div {
+    margin-top: 0px;
+    margin-bottom: 2px;
+}

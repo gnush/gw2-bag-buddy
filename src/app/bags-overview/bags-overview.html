@@ -30,7 +30,6 @@
           <th>Character</th>
           <th>Used Slots</th>
           <th>Equipped Bags</th>
-          <th>Available Bag#</th>
         </tr>
       </thead>
       <tbody>
@@ -44,11 +43,16 @@
             <td>
               <div class="bag-row">
               @for(bag of character.equippedBags; track $index) {
-                <div class="bag-info"><app-equipped-bag [bag]="bag"/></div>
+                <div class="bag-info">
+                  @if (bag !== null) {
+                    <app-equipped-bag [bag]="bag"/>
+                  } @else {
+                    <app-empty-bag-slot />
+                  }
+                </div>
               }
               </div>
             </td>
-            <td class="align-right">{{ character.emptyBagSlots }}</td>
           </tr>
         }
       </tbody>
