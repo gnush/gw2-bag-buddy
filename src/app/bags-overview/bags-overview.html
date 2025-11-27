@@ -3,7 +3,7 @@
     <!-- <button (click)="toggleApiKeyInfo()">&#8505;</button> TODO: excempt from submit, without moving out of form (forces newline) -->
     <span class="button" (click)="toggleApiKeyInfo()">&#8505;</span>
     <input type="text" placeholder="API Key" formControlName="apiKey"/>
-    <button type="submit" class="button" [disabled]="!apiKeyForm.valid">Apply</button>
+    <button type="submit" class="button" [disabled]="!apiKeyForm.valid || apiKeyForm.value.apiKey === bagsService.apiAccessToken()">Apply</button>
   </form>
   @if(showApiKeyInfo) {
     <p>
@@ -13,7 +13,7 @@
     <p>
       Required permissions:
       @for(permission of bagsService.requiredApiKeyPermissions; track $index) {
-        @if(missingPermissions().includes(permission)) {
+        @if(!bagsService.apiPermissions().includes(permission)) {
           <span class="permissionMissing">{{permission}}</span>
         } @else {
           <span class="permission">{{permission}}</span>
@@ -34,10 +34,10 @@
         </tr>
       </thead>
       <tbody>
-        @if(bagsService.characters() == []) {
+        @if(bagsService.getCharacters() == []) {
           loading character data
         }
-        @for(character of bagsService.characters(); track $index) {
+        @for(character of bagsService.getCharacters(); track $index) {
           <tr>
             <td>{{ character.name }}</td>
             <td>{{ character.usedInventorySlots() }} / {{ character.totalInventorySlots() }}</td>
@@ -57,7 +57,7 @@
   <div class="unused-bags">
     <div id="subheader">Available Bags</div>
     <div class="bag-grid">
-      @for (bag of bagsService.unusedBags(); track $index) {
+      @for (bag of bagsService.getUnusedBags(); track $index) {
         <app-unused-bag [bag]="bag" />
       }
     </div>

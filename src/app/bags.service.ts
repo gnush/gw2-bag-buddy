@@ -9,29 +9,25 @@ export class BagsService {
   private readonly gw2ApiBase = 'https://api.guildwars2.com/v2';
 
   // https://wiki.guildwars2.com/wiki/API:Main
-  public requiredApiKeyPermissions = ['account','characters', 'inventories'];
+  public readonly requiredApiKeyPermissions = ['account','characters', 'inventories'];
 
   private apiKey: TokenInfo = {
     accessToken: '',
     permissions: []
   };
 
-  // TODO: export type to interface
-  unusedBags = signal<{bag: InventoryBag; location: string}[]>([]);
+  public apiAccessToken(): string { return this.apiKey.accessToken }
+  public apiPermissions(): string[] { return this.apiKey.permissions }
 
-  // bags of chars (including char inventories)
-  // https://wiki.guildwars2.com/wiki/API:2/characters
+  // TODO: export signal captured type to interface
+  private unusedBags = signal<{bag: InventoryBag; location: string}[]>([]);
+  public getUnusedBags() { return this.unusedBags() }
 
-  // bank
-  // https://wiki.guildwars2.com/wiki/API:2/account/bank
-
-  // shared inventory slots
-  // https://wiki.guildwars2.com/wiki/API:2/account/inventory
-
-  characters = signal<CharacterInfo[]>([]);
+  private characters = signal<CharacterInfo[]>([]);
+  public getCharacters() { return this.characters() }
 
   async populateEquippedCharacterBags() {
-    if (this.apiKey.permissions.includes('characters')) {
+    if (this.checkAccessTokenPermissions(['account', 'characters'])) {
       const data: Promise<CharacterInventory[]> = (await fetch(`${this.gw2ApiBase}/characters?ids=all&access_token=${this.apiKey.accessToken}`)).json() ?? [];
       const characters: CharacterInventory[] = await data;
 
@@ -89,7 +85,7 @@ export class BagsService {
   }
 
   async populateUnusedSharedInventoryBags() {
-    if (this.apiKey.permissions.includes('inventories')) {
+    if (this.checkAccessTokenPermissions(['account', 'inventories'])) {
       const data: (SharedInventoryItemResponse|null)[] = await ((await fetch(`${this.gw2ApiBase}/account/inventory?access_token=${this.apiKey.accessToken}`))).json() ?? [];
       const sharedInventory: SharedInventoryItemResponse[] = data.filter(item => item != null);
 
@@ -128,7 +124,7 @@ export class BagsService {
   }
 
   async populateUnusedBankBags() {
-    if (this.apiKey.permissions.includes('inventories')) {
+    if (this.checkAccessTokenPermissions(['account', 'inventories'])) {
       const data: (BankResponse|null)[] = await (await fetch(`${this.gw2ApiBase}/account/bank?access_token=${this.apiKey.accessToken}`)).json() ?? [];
       const bankContent: BankResponse[] = data.filter(item => item != null);
 
@@ -222,35 +218,29 @@ export class BagsService {
    * @param accessToken the new access token for the GW2 api
    * @returns The missing permissions of the supplied access token
    */
-  async setGW2ApiAccessToken(accessToken: string): Promise<string[]> {
+  async setGW2ApiAccessToken(accessToken: string) {
     const data: Promise<{permissions: string[]}> = (await fetch(`${this.gw2ApiBase}/tokeninfo?access_token=${accessToken}`)).json();
     const permissions = (await data).permissions ?? [];
-    const missingPermissions = await this.validatePermissions(permissions);
+    const missingPermissions = this.validatePermissions(permissions);
 
-    if (missingPermissions.length === 0) {
+    if (/*accessToken !== this.apiKey.accessToken && */ missingPermissions.length === 0) {
+      this.unusedBags.set([]);
+      this.characters.set([]);
+
       this.apiKey = {
         accessToken: accessToken,
         permissions: permissions
       };
       localStorage.setItem('apiKey', accessToken);
     }
-
-    return missingPermissions;
   }
 
-  private async validatePermissions(permissions: string[]): Promise<string[]> {
-    var missingRequirements: string[] = [];
-
-    this.requiredApiKeyPermissions.forEach(permission => {
-      if (!permissions.includes(permission))
-        missingRequirements.push(permission);
-    });
-
-    return missingRequirements;
+  private validatePermissions(permissions: string[]): string[] {
+    return this.requiredApiKeyPermissions.filter(x => !permissions.includes(x))
   }
 
-  private checkAccessTokenPermission(wanted: string[]) {
-    wanted.every(this.apiKey.permissions.includes);
+  private checkAccessTokenPermissions(wanted: string[]): boolean {
+    return wanted.every(x => this.apiKey.permissions.includes(x));
   }
 }
 
