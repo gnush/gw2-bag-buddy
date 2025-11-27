@@ -200,6 +200,7 @@ export class BagsService {
     const limit = 200;
 
     if (ids.length <= limit) {
+      // TODO: add localization support (&lang=de)
       return await (await fetch(`${this.gw2ApiBase}/items?ids=${ids}`)).json() ?? [];
     } else {
       const chunks = [...Array(Math.ceil(ids.length / limit))].map(_ => ids.splice(0, limit));
@@ -214,29 +215,40 @@ export class BagsService {
   }
 
   /**
-   * Sets a new access token to the GW2 api
+   * Sets a new access token to the GW2 api and retrieves data from the api
    * @param accessToken the new access token for the GW2 api
-   * @returns The missing permissions of the supplied access token
+   * @returns true if a new access token has been set, false otherwise
    */
-  async setGW2ApiAccessToken(accessToken: string) {
+  async applyGW2ApiAccessToken(accessToken: string): Promise<boolean> {
+    // Return if trying to apply the same access token again
+    if (accessToken === this.apiKey.accessToken)
+      return true;
+
     const data: Promise<{permissions: string[]}> = (await fetch(`${this.gw2ApiBase}/tokeninfo?access_token=${accessToken}`)).json();
     const permissions = (await data).permissions ?? [];
-    const missingPermissions = this.validatePermissions(permissions);
 
-    if (/*accessToken !== this.apiKey.accessToken && */ missingPermissions.length === 0) {
+    // valid api keys at least include the 'account' permission
+    if (permissions.includes('account')) {
+      // Remove old data
       this.unusedBags.set([]);
       this.characters.set([]);
 
+      // Set new api key
       this.apiKey = {
         accessToken: accessToken,
         permissions: permissions
       };
       localStorage.setItem('apiKey', accessToken);
-    }
-  }
 
-  private validatePermissions(permissions: string[]): string[] {
-    return this.requiredApiKeyPermissions.filter(x => !permissions.includes(x))
+      // Retrieve information from the api
+      this.populateEquippedCharacterBags();
+      this.populateUnusedSharedInventoryBags();
+      this.populateUnusedBankBags();
+
+      return this.requiredApiKeyPermissions.every(x => this.apiKey.permissions.includes(x));
+    }
+
+    return false;
   }
 
   private checkAccessTokenPermissions(wanted: string[]): boolean {

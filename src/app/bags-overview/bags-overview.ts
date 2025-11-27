@@ -4,6 +4,7 @@ import { BagsService} from '../bags.service';
 import { EquippedBag } from '../equipped-bag/equipped-bag';
 import { UnusedBag } from '../unused-bag/unused-bag';
 
+// TODO: split char table and unused bags to new components
 @Component({
   selector: 'app-bags-overview',
   imports: [EquippedBag, ReactiveFormsModule, UnusedBag],
@@ -26,11 +27,8 @@ export class BagsOverview {
   }
 
   applyApiKey() {
-    this.bagsService.setGW2ApiAccessToken(this.apiKeyForm.value.apiKey ?? '').then(_ => {
-      // move to bagService (apply api key: check key and if valid populate entries)
-      this.bagsService.populateEquippedCharacterBags();
-      this.bagsService.populateUnusedSharedInventoryBags();
-      this.bagsService.populateUnusedBankBags();
+    this.bagsService.applyGW2ApiAccessToken(this.apiKeyForm.value.apiKey ?? '').then(success => {
+      this.showApiKeyInfo = !success;
     });
   }
 

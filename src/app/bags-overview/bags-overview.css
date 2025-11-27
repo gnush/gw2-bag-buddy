@@ -73,6 +73,10 @@ td, th {
   padding: 6px;
 }
 
+td.align-right {
+  text-align: right;
+}
+
 tr:nth-child(even) {
   background-color: var(--accent-color);
 }
