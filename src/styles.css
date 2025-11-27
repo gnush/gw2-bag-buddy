@@ -3,9 +3,9 @@
   padding: 0;
 } */
 
-/* body {
-  font-family: 'Be Vietnam Pro', sans-serif;
-} */
+body {
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
 
 :root {
   --primary-color: #e65c00;
