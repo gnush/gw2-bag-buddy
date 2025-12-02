@@ -19,70 +19,47 @@ export class BagsService {
   public apiAccessToken(): string { return this.apiKey.accessToken }
   public apiPermissions(): string[] { return this.apiKey.permissions }
 
+  private readonly characters = signal<CharacterInfo[]>([]);
+  public getCharacters() { return this.characters() }
+
   // TODO: export signal captured type to interface
-  private unusedBags = signal<{bag: InventoryBag; location: string}[]>([]);
+  private readonly unusedBags = signal<{bag: InventoryBag; location: string}[]>([]);
   public getUnusedBags() { return this.unusedBags() }
 
-  private characters = signal<CharacterInfo[]>([]);
-  public getCharacters() { return this.characters() }
+  private readonly bagSlotExpansions = signal<{ location: string; count: number }[]>([]);
+  public getBagSlotExpansions() { return this.bagSlotExpansions() }
+
+  // constructor(public foo: BagDetails | UnlockDetails | undefined) {
+  //   // bag slot expansion id: 19993
+  //   this.bagSlotExpansion = "";
+
+  //   switch(typeof foo) {
+  //     case "object": ;
+  //   }
+  // }
 
   async populateEquippedCharacterBags() {
     if (this.checkAccessTokenPermissions(['account', 'characters'])) {
-      const data: Promise<CharacterInventory[]> = (await fetch(`${this.gw2ApiBase}/characters?ids=all&access_token=${this.apiKey.accessToken}`)).json() ?? [];
-      const characters: CharacterInventory[] = await data;
+      const data: Promise<Character[]> = (await fetch(`${this.gw2ApiBase}/characters?ids=all&v=latest&access_token=${this.apiKey.accessToken}`)).json() ?? [];
+      const characters: Character[] = await data;
 
       characters.forEach(character =>
-        this.populateUnusedCharacterInventoryBags(
-          character.name,
-          character.bags.flatMap(bag => bag?.inventory)
-                        .filter(item => item != null)
+        this.unusedCharacterInventoryBags(
+          (character.bags ?? []).flatMap(x => x?.inventory)
+                                .filter(x => x !== null && x !== undefined)
+        ).then(bags =>
+          bags.forEach(bag => this.addUnusedBag(bag, character.name))
         )
       );
 
-      for (const character of characters) {
-        const bags = await this.populateEquippedBags(character.bags, character.name);
-
-        this.characters.update(old =>
-          [
-            ...old,
-            new MyCharacterInfo(
-              character.name,
-              character.profession,
-              character.level,
-              bags
-            )
-          ]
-        );
-      }
+      characters.forEach(character => 
+        this.equippedBags(character.name, character.bags ?? [])
+            .then(bags => this.addCharacter(character.name, character.profession, character.level, bags))
+      );
     }
   }
 
   // TODO: unify unused bag functions
-  private async populateUnusedCharacterInventoryBags(character: string, inventory: Inventory[]) {
-    const itemInfos = await this.lookupItemIds(inventory.map(item => item.id));
-
-    inventory.forEach(inventoryItem => {
-      const info = itemInfos.find(item => item.id === inventoryItem.id);
-      if (info !== undefined) {
-        const bag = this.itemResponseToInventoryBag(
-          info,
-          inventoryItem.binding === 'AccountBound' ? inventoryItem.binding : inventoryItem.bound_to
-        );
-        if (bag != null) {
-          this.unusedBags.update(old =>
-            [
-              ...old,
-              {
-                bag: bag,
-                location: character
-              }
-            ]
-          );
-        }
-      }
-    });
-  }
-
   async populateUnusedSharedInventoryBags() {
     if (this.checkAccessTokenPermissions(['account', 'inventories'])) {
       const data: (SharedInventoryItemResponse|null)[] = await ((await fetch(`${this.gw2ApiBase}/account/inventory?access_token=${this.apiKey.accessToken}`))).json() ?? [];
@@ -95,7 +72,7 @@ export class BagsService {
       for (const sharedInventoryItem of sharedInventory) {
         const itemResponse = items.find(item => item.id === sharedInventoryItem.id);
         if (itemResponse !== undefined) {
-          const bag = this.itemResponseToInventoryBag(itemResponse, sharedInventoryItem.binding);
+          const bag = this.itemResponseToInventoryBag(itemResponse, sharedInventoryItem.binding, undefined);
           if (bag != null)
             this.unusedBags.update(old =>
               [
@@ -135,7 +112,8 @@ export class BagsService {
         if (itemInfo != undefined) {
           const bag = this.itemResponseToInventoryBag(
             itemInfo,
-            bankItem.binding === 'AccountBound' ? bankItem.binding : bankItem.bound_to
+            bankItem.binding,
+            bankItem.bound_to
           );
           if (bag != null)
             this.unusedBags.update(old => 
@@ -152,20 +130,34 @@ export class BagsService {
     }
   }
 
-  private async populateEquippedBags(bags: (BagResponse|null)[], characterName: string): Promise<(InventoryBag|null)[]> {
-    const actualBags = bags.filter(bag => bag != null);
-    const ids = actualBags.map(bag => bag.id);
+  private async unusedCharacterInventoryBags(inventory: InventorySlot[]): Promise<InventoryBag[]> {
+    const items = await this.lookupItemIds(inventory.map(item => item.id));
+
+    return inventory
+      .map(inventoryItem =>
+        this.itemResponseToInventoryBag(
+          items.find(item => inventoryItem.id === item.id),
+          inventoryItem.binding,
+          inventoryItem.bound_to
+        )
+      )
+      .filter(x => x !== null);
+  }
+
+  private async equippedBags(characterName: string, bags: (Bag|null)[]): Promise<(InventoryBag|null)[]> {
+    const ids = bags.filter(bag => bag != null)
+                    .map(bag => bag.id);
     const bagInfos: ItemResponse[] = await this.lookupItemIds(ids);
 
     return bags.map(bag =>
       bag !== null ?
-        this.bagResponseToInventoryBag(bag, characterName, bagInfos.find(item => item.id == bag.id)) :
+        this.equippedBagToInventoryBag(bag, characterName, bagInfos.find(item => item.id == bag.id)) :
         null
     );
   }
 
-  private itemResponseToInventoryBag(item: ItemResponse, binding: string|undefined): InventoryBag|null {
-    if (item.type !== 'Bag')
+  private itemResponseToInventoryBag(item: ItemResponse | undefined, binding: string|undefined, bound_to: string|undefined): InventoryBag|null {
+    if (item === undefined || item.type !== 'Bag')
       return null;
       
     return {
@@ -176,11 +168,11 @@ export class BagsService {
       icon: item.icon,
       totalSlots: item.details?.size ?? 0,
       usedSlots: 0,
-      boundTo: binding ?? ''
+      boundTo: bound_to ?? (binding ?? '')
     }
   }
 
-  private bagResponseToInventoryBag(bag: BagResponse, characterName: string, bagInfo: ItemResponse|undefined): InventoryBag {
+  private equippedBagToInventoryBag(bag: Bag, characterName: string, bagInfo: ItemResponse|undefined): InventoryBag {
     return {
       itemId: bag.id,
       name: bagInfo?.name ?? '',
@@ -189,8 +181,23 @@ export class BagsService {
       icon: bagInfo?.icon ?? '',
       totalSlots: bag.size,
       usedSlots: bag.inventory.filter(item => item != null).length,
-      boundTo: (bagInfo?.flags.includes('AccountBound') ? 'Account' : characterName)
+      boundTo: (bagInfo?.flags
+                ? this.includesOneOf(bagInfo.flags, 'AccountBindOnUse', 'AccountBound')
+                  ? 'Account'
+                  : this.includesOneOf(bagInfo.flags, 'SoulbindOnAcquire', 'SoulBindOnUse')
+                    ? characterName
+                    : ''
+                : ''
+               )
     }
+  }
+
+  private includesOneOf<T>(array: T[], ...elems: T[]): boolean {
+    for (const elem of elems) {
+      if (array.includes(elem))
+        return true;
+    }
+    return false;
   }
 
   /**
@@ -254,6 +261,23 @@ export class BagsService {
     return false;
   }
 
+  private addUnusedBag(bag: InventoryBag, location: string) {
+    this.unusedBags.update(old => [
+      ...old,
+      {
+        bag: bag,
+        location: location
+      }
+    ]);
+  }
+
+  private addCharacter(name: string, profession: string, level: number, equippedBags: (InventoryBag | null)[]) {
+    this.characters.update(old => [
+      ...old,
+      new MyCharacterInfo(name, profession, level, equippedBags)
+    ]);
+  }
+
   private checkAccessTokenPermissions(wanted: string[]): boolean {
     return wanted.every(x => this.apiKey.permissions.includes(x));
   }
@@ -265,9 +289,18 @@ interface TokenInfo {
   permissions: string[];
 }
 
+type ItemDetails = BagDetails | UnlockDetails
+
 interface BagDetails {
+  tag: "bag";
   size: number;
   no_sell_or_sort: boolean;
+}
+
+interface UnlockDetails {
+  tag: "unlock";
+  type: string;
+  unlock_type: string;
 }
 
 interface ItemResponse {
@@ -281,37 +314,215 @@ interface ItemResponse {
   details: BagDetails | undefined;
 }
 
-// rename InventoryItem
-interface Inventory {
-  id: number;
-  count: number;
-  binding: string | undefined;
-  bound_to: string | undefined;
-}
-
-interface BagResponse {
-  id: number;
-  size: number;
-  inventory: (Inventory | null)[]
-}
-
-interface CharacterInventory {
-  name: string;
-  profession: string;
-  level: number;
-  bags: (BagResponse | null)[];
-}
-
 interface SharedInventoryItemResponse {
   id: number;
   count: number;
   binding: string|undefined;
 }
 
-// TODO: merge with Inventory
 interface BankResponse {
   id: number;
   count: number;
   binding: string|undefined;
   bound_to: string|undefined;
+}
+
+
+// GW2 APi response structure: truthy
+interface Character {
+  name: string;
+  race: string;
+  gender: string;
+  profession: string;
+  level: number;
+  guild: string | undefined;
+  age: number;
+  last_modified: string | undefined;
+  created: string;
+  deaths: number;
+  title: number | undefined;
+  build_tabs_unlocked: number | undefined;
+  active_build_tab: number | undefined;
+  equipment_tabs_unlocked: number | undefined;
+  active_equipment_tab: number | undefined;
+  build_tabs: BuildTab[] | undefined;
+  equipment: Equipment[];
+  equipment_tabs: EquipmentTab[] | undefined;
+  bags: (Bag | null)[] | undefined;
+}
+
+interface BuildTab {
+  tab: number;
+  is_active: boolean;
+  build: {
+    name: string;
+    profession: string;
+    specializations: Specialization[];
+    skills: Skills;
+    aquatic_skills: Skills;
+    legends: [string | null, string | null] | undefined;
+    aquatic_legends: [string | null, string | null] | undefined;
+    pets: Pets | undefined;
+  };
+}
+
+interface Specialization {
+  id: number | null;
+  traits: [number | null, number | null, number | null];
+}
+
+interface Skills {
+  heal: number | null;
+  utilities: [number | null, number | null, number | null];
+  elite: number | null;
+}
+
+interface Pets {
+  terrestrial: [number | null, number | null];
+  aquatic: [number | null, number | null];
+}
+
+interface Equipment {
+  id: number;
+  count: number | undefined;
+  slot: "HelmAquatic"
+      | "Backpack"
+      | "Coat"
+      | "Boots"
+      | "Gloves"
+      | "Helm"
+      | "Leggings"
+      | "Shoulders"
+      | "Accessory1"
+      | "Accessory2"
+      | "Ring1"
+      | "Ring2"
+      | "Amulet"
+      | "WeaponAquaticA"
+      | "WeaponAquaticB"
+      | "WeaponA1"
+      | "WeaponA2"
+      | "WeaponB1"
+      | "WeaponB2"
+      | "Sickle"
+      | "Axe"
+      | "Pick"
+      | "PowerCore"
+      | "FishingLure"
+      | "FishingBait"
+      | "FishingRod"
+      | "SensoryArray"
+      | "ServiceChip"
+      | undefined;
+  infusions: number[] | undefined;
+  upgrades: number[] | undefined;
+  skin: number | undefined;
+  stats: ItemStats | undefined;
+  binding: "Character" | "Account" | undefined;
+  location: "Equipped" | "Armory" | "EquippedFromLegendaryArmory" | "LegendaryArmory" | undefined;
+  tabs: number[] | undefined;
+  charges: number[] | undefined;
+  bound_to: string | undefined;
+  dyes: (number | null)[];
+}
+
+interface ItemStats {
+  id: number;
+  attributes: {
+    BoonDuration: number | undefined;
+    ConditionDamage: number | undefined;
+    ConditionDuration: number | undefined;
+    CritDamage: number | undefined;
+    Healing: number | undefined;
+    Power: number | undefined;
+    Precision: number | undefined;
+    Toughness: number | undefined;
+    Vitality: number | undefined;
+  };
+}
+
+interface EquipmentTab {
+  tab: number;
+  name: string;
+  is_active: boolean;
+  equipment: Equipment[];
+  equipment_pvp: {
+    amulet: number;
+    rune: number;
+    sigills: (number | null)[];
+  }
+}
+
+interface Bag {
+  id: number;
+  size: number;
+  inventory: (InventorySlot | null)[];
+}
+
+interface InventorySlot {
+  id: number;
+  count: number;
+  charges: number | undefined;
+  infusions: number[] | undefined;
+  upgrades: number[] | undefined;
+  skin: number | undefined;
+  stats: ItemStats | undefined;
+  dyes: (number | null)[] | undefined;
+  binding: "Account" | "Character" | undefined;
+  bound_to: string | undefined;
+}
+
+
+
+
+// TODO: remove?
+// https://wiki.guildwars2.com/wiki/API:2/items
+interface _Item {
+  id: number;
+  chat_link: string;
+  name: string;
+  icon: string | undefined;
+  description: string | undefined;
+  type: "Bag" | "Consumable";
+  rarity: string;
+  level: number;
+  vendor_value: number;
+  default_skin: number | undefined;
+  flags: string[];
+  game_types: string[];
+  restrictions: [];
+  upgrades_into: {upgrade: string; item_id: number}[];
+  upgrades_from: {upgrade: string; item_id: number}[];
+  details: _BagDetails | _ConsumableDetails | undefined;
+}
+
+interface _BagDetails {
+  tag: "Bag";
+  size: number;
+  no_sell_or_sort: boolean;
+}
+
+interface _ConsumableDetails {
+  tag: "Consumable";
+  type: "Unlock";
+  description: string | undefined;
+  duration_ms: number | undefined;
+  // present for Unlock types, which is what we are interested in
+  unlock_type: "BagSlot"              // Bag Slot Expansion
+             | "BankTab"              // Bank Tab Expansion
+             | "BuildLibrarySlot"     // Build Storage Expansion
+             | "BuildLoadoutTab"      // Build Template Expansion
+             | "CollectibleCapacity"  // Storage Expander
+             | "Dye"                  // Dyes
+             | "GearLoadoutTab"       // Equipment Template Expansion
+             | "SharedSlot"           // Shared Inventory Slot
+             | undefined;
+  color_id: number | undefined;
+  recipe_id: number | undefined;
+  extra_recipe_ids: number[] | undefined;
+  guild_upgrade_id: number | undefined;
+  apply_count: number | undefined;
+  name: string | undefined;
+  icon: string | undefined;
+  skins: number[] | undefined;
 }
