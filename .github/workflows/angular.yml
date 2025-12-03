@@ -33,4 +33,17 @@ jobs:
             --configuration production \
             --base-href https://gnush.github.io/gw2-bag-buddy/ \
             --output-hashing none
-      
+      - name: Commit to gh_page branch
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+          git checkout gh_page
+          cp dist/gw2-bag-buddy/browser/* .
+          
+          git add .
+          # check if changes have been added
+          if [ "$(git status | grep 'nothing to commit')" = "" ]; then
+            git commit -m 'deploy page'
+            git push
+          fi
