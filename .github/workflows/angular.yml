@@ -1,0 +1,36 @@
+name: Build and deploy angular project
+
+on:
+  push:
+    branches: [ "master" ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '.github/**'
+      - '.vscode/**'
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install deps
+        run: npm ci
+      - name: Build project
+        run: |
+          npm run build -- \
+            --configuration production \
+            --base-href https://gnush.github.io/gw2-bag-buddy/ \
+            --output-hashing none
+      
