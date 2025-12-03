@@ -31,7 +31,7 @@ jobs:
         run: |
           npm run build -- \
             --configuration production \
-            --base-href https://{{ github.actor }}.github.io/"$(echo {{ github.repository }} | sed 's:.*/::')"/ \
+            --base-href https://gnush.github.io/gw2-bag-buddy/ \
             --output-hashing none
       - name: Commit to gh_page branch
         run: |
