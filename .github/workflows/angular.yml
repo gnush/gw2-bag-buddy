@@ -31,7 +31,7 @@ jobs:
         run: |
           npm run build -- \
             --configuration production \
-            --base-href https://gnush.github.io/gw2-bag-buddy/ \
+            --base-href https://{{ github.actor }}.github.io/"$(echo {{ github.repository }} | sed 's:.*/::')"/ \
             --output-hashing none
       - name: Commit to gh_page branch
         run: |
@@ -43,7 +43,7 @@ jobs:
           
           git add .
           # check if changes have been added
-          if [ "$(git status | grep 'nothing to commit')" = "" ]; then
+          if [ -z "$(git status | grep 'nothing to commit')" ]; then
             git commit -m 'deploy page'
             git push
           fi
