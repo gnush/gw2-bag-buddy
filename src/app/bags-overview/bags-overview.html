@@ -3,7 +3,7 @@
     <!-- <button (click)="toggleApiKeyInfo()">&#8505;</button> TODO: excempt from submit, without moving out of form (forces newline) -->
     <span class="button" (click)="toggleApiKeyInfo()">&#8505;</span>
     <input type="text" placeholder="API Key" formControlName="apiKey"/>
-    <button type="submit" class="button" [disabled]="!apiKeyForm.valid || apiKeyForm.value.apiKey === bagsService.apiAccessToken()">Apply</button>
+    <button type="submit" class="button" [disabled]="!apiKeyForm.valid || apiKeyForm.value.apiKey === apiKeyService.apiAccessToken()">Apply</button>
   </form>
   @if(showApiKeyInfo) {
     <p>
@@ -12,8 +12,8 @@
     </p>
     <p>
       Required permissions:
-      @for(permission of bagsService.requiredApiKeyPermissions; track $index) {
-        @if(!bagsService.apiPermissions().includes(permission)) {
+      @for(permission of apiKeyService.requiredApiKeyPermissions; track $index) {
+        @if(!apiKeyService.apiPermissions().includes(permission)) {
           <span class="permissionMissing">{{permission}}</span>
         } @else {
           <span class="permission">{{permission}}</span>

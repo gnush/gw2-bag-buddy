@@ -1,23 +1,18 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { CharacterInfo, MyCharacterInfo } from './characterInfo';
 import { InventoryBag } from './inventoryBag';
+import { ApiKeyService } from './apiKey.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BagsService {
+  private apiKeyService = inject(ApiKeyService);
+
   private readonly gw2ApiBase = 'https://api.guildwars2.com/v2';
 
   // https://wiki.guildwars2.com/wiki/API:Main
   public readonly requiredApiKeyPermissions = ['account','characters', 'inventories'];
-
-  private apiKey: TokenInfo = {
-    accessToken: '',
-    permissions: []
-  };
-
-  public apiAccessToken(): string { return this.apiKey.accessToken }
-  public apiPermissions(): string[] { return this.apiKey.permissions }
 
   private readonly characters = signal<CharacterInfo[]>([]);
   public getCharacters() { return this.characters() }
@@ -38,31 +33,20 @@ export class BagsService {
   //   }
   // }
 
-  async populateEquippedCharacterBags() {
-    if (this.checkAccessTokenPermissions(['account', 'characters'])) {
-      const data: Promise<Character[]> = (await fetch(`${this.gw2ApiBase}/characters?ids=all&v=latest&access_token=${this.apiKey.accessToken}`)).json() ?? [];
-      const characters: Character[] = await data;
+  repopulateBags() {
+    this.characters.set([]);
+    this.unusedBags.set([]);
+    this.bagSlotExpansions.set([]);
 
-      characters.forEach(character =>
-        this.unusedCharacterInventoryBags(
-          (character.bags ?? []).flatMap(x => x?.inventory)
-                                .filter(x => x !== null && x !== undefined)
-        ).then(bags =>
-          bags.forEach(bag => this.addUnusedBag(bag, character.name))
-        )
-      );
-
-      characters.forEach(character => 
-        this.equippedBags(character.name, character.bags ?? [])
-            .then(bags => this.addCharacter(character.name, character.profession, character.level, bags))
-      );
-    }
+    this.populateEquippedCharacterBags();
+    this.populateUnusedBankBags();
+    this.populateUnusedSharedInventoryBags();
   }
 
   // TODO: unify unused bag functions
   async populateUnusedSharedInventoryBags() {
-    if (this.checkAccessTokenPermissions(['account', 'inventories'])) {
-      const data: (SharedInventoryItemResponse|null)[] = await ((await fetch(`${this.gw2ApiBase}/account/inventory?access_token=${this.apiKey.accessToken}`))).json() ?? [];
+    if (this.apiKeyService.checkAccessTokenPermissions(['account', 'inventories'])) {
+      const data: (SharedInventoryItemResponse|null)[] = await ((await fetch(`${this.gw2ApiBase}/account/inventory?access_token=${this.apiKeyService.apiAccessToken()}`))).json() ?? [];
       const sharedInventory: SharedInventoryItemResponse[] = data.filter(item => item != null);
 
       const items: ItemResponse[] = (await this.lookupItemIds(
@@ -100,8 +84,8 @@ export class BagsService {
   }
 
   async populateUnusedBankBags() {
-    if (this.checkAccessTokenPermissions(['account', 'inventories'])) {
-      const data: (BankResponse|null)[] = await (await fetch(`${this.gw2ApiBase}/account/bank?access_token=${this.apiKey.accessToken}`)).json() ?? [];
+    if (this.apiKeyService.checkAccessTokenPermissions(['account', 'inventories'])) {
+      const data: (BankResponse|null)[] = await (await fetch(`${this.gw2ApiBase}/account/bank?access_token=${this.apiKeyService.apiAccessToken()}`)).json() ?? [];
       const bankContent: BankResponse[] = data.filter(item => item != null);
 
       const items: ItemResponse[] = await this.lookupItemIds(bankContent.map(item => item.id));
@@ -130,6 +114,30 @@ export class BagsService {
     }
   }
 
+  async populateEquippedCharacterBags() {
+    if (this.apiKeyService.checkAccessTokenPermissions(['account', 'characters'])) {
+      const data: Promise<Character[]> = (await fetch(`${this.gw2ApiBase}/characters?ids=all&v=latest&access_token=${this.apiKeyService.apiAccessToken()}`)).json() ?? [];
+      const characters: Character[] = await data;
+
+      characters.forEach(character =>
+        this.unusedCharacterInventoryBags(
+          (character.bags ?? []).flatMap(x => x?.inventory)
+                                .filter(x => x !== null && x !== undefined)
+        ).then(bags =>
+          bags.forEach(bag => this.addUnusedBag(bag, character.name))
+        )
+      );
+
+      characters.forEach(character => 
+        this.equippedBags(character.name, character.bags ?? [])
+            .then(bags => this.addCharacter(character.name, character.profession, character.level, bags))
+      );
+    }
+  }
+
+  /**
+   * Helper for populateEquippedCharacterBags
+   */
   private async unusedCharacterInventoryBags(inventory: InventorySlot[]): Promise<InventoryBag[]> {
     const items = await this.lookupItemIds(inventory.map(item => item.id));
 
@@ -224,43 +232,6 @@ export class BagsService {
     }
   }
 
-  /**
-   * Sets a new access token to the GW2 api and retrieves data from the api
-   * @param accessToken the new access token for the GW2 api
-   * @returns true if a new access token has been set, false otherwise
-   */
-  async applyGW2ApiAccessToken(accessToken: string): Promise<boolean> {
-    // Return if trying to apply the same access token again
-    if (accessToken === this.apiKey.accessToken)
-      return true;
-
-    const data: Promise<{permissions: string[]}> = (await fetch(`${this.gw2ApiBase}/tokeninfo?access_token=${accessToken}`)).json();
-    const permissions = (await data).permissions ?? [];
-
-    // valid api keys at least include the 'account' permission
-    if (permissions.includes('account')) {
-      // Remove old data
-      this.unusedBags.set([]);
-      this.characters.set([]);
-
-      // Set new api key
-      this.apiKey = {
-        accessToken: accessToken,
-        permissions: permissions
-      };
-      localStorage.setItem('apiKey', accessToken);
-
-      // Retrieve information from the api
-      this.populateEquippedCharacterBags();
-      this.populateUnusedSharedInventoryBags();
-      this.populateUnusedBankBags();
-
-      return this.requiredApiKeyPermissions.every(x => this.apiKey.permissions.includes(x));
-    }
-
-    return false;
-  }
-
   private addUnusedBag(bag: InventoryBag, location: string) {
     this.unusedBags.update(old => [
       ...old,
@@ -277,18 +248,9 @@ export class BagsService {
       new MyCharacterInfo(name, profession, level, equippedBags)
     ]);
   }
-
-  private checkAccessTokenPermissions(wanted: string[]): boolean {
-    return wanted.every(x => this.apiKey.permissions.includes(x));
-  }
 }
 
 // GW2 API response structures
-interface TokenInfo {
-  accessToken: string;
-  permissions: string[];
-}
-
 type ItemDetails = BagDetails | UnlockDetails
 
 interface BagDetails {

@@ -4,6 +4,7 @@ import { BagsService} from '../bags.service';
 import { EquippedBag } from '../equipped-bag/equipped-bag';
 import { UnusedBag } from '../unused-bag/unused-bag';
 import { EmptyBagSlot } from '../empty-bag-slot/empty-bag-slot';
+import { ApiKeyService } from '../apiKey.service';
 
 // TODO: split char table and unused bags to new components
 @Component({
@@ -19,6 +20,7 @@ export class BagsOverview {
     apiKey: new FormControl('', Validators.required)
   });
 
+  apiKeyService = inject(ApiKeyService);
   bagsService = inject(BagsService);
 
   constructor() {
@@ -28,8 +30,10 @@ export class BagsOverview {
   }
 
   applyApiKey() {
-    this.bagsService.applyGW2ApiAccessToken(this.apiKeyForm.value.apiKey ?? '').then(success => {
+    this.apiKeyService.setGW2ApiAccessToken(this.apiKeyForm.value.apiKey ?? '').then(success => {
       this.showApiKeyInfo = !success;
+
+      this.bagsService.repopulateBags();
     });
   }
 
