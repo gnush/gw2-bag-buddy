@@ -6,7 +6,10 @@ import { UnusedBag } from '../unused-bag/unused-bag';
 import { EmptyBagSlot } from '../empty-bag-slot/empty-bag-slot';
 import { ApiKeyService } from '../apiKey.service';
 
-// TODO: split char table and unused bags to new components
+// TODO:
+//   - split char table and unused bags to new components
+//   - move api key input form to separate component
+//   - api key input form as it's own page
 @Component({
   selector: 'app-bags-overview',
   imports: [EmptyBagSlot, EquippedBag, ReactiveFormsModule, UnusedBag],

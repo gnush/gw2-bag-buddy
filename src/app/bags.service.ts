@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { CharacterInfo, MyCharacterInfo } from './characterInfo';
 import { InventoryBag } from './inventoryBag';
 import { ApiKeyService } from './apiKey.service';
+import { DisplaybeItem } from './displayableItem';
 
 @Injectable({
   providedIn: 'root',
@@ -41,6 +42,12 @@ export class BagsService {
     this.populateEquippedCharacterBags();
     this.populateUnusedBankBags();
     this.populateUnusedSharedInventoryBags();
+  }
+
+  // TODO: remove/merge?
+  public repopulateEquippedBagsAndJadebotComponents() {
+    this.characters.set([]);
+    this.populateEquippedCharacterBags();
   }
 
   // TODO: unify unused bag functions
@@ -114,11 +121,13 @@ export class BagsService {
     }
   }
 
+  // TODO: rename function to reflect changes (also search for equipped jadebot components)
   async populateEquippedCharacterBags() {
     if (this.apiKeyService.checkAccessTokenPermissions(['account', 'characters'])) {
       const data: Promise<Character[]> = (await fetch(`${this.gw2ApiBase}/characters?ids=all&v=latest&access_token=${this.apiKeyService.apiAccessToken()}`)).json() ?? [];
       const characters: Character[] = await data;
 
+      // search unused bags in character inventories
       characters.forEach(character =>
         this.unusedCharacterInventoryBags(
           (character.bags ?? []).flatMap(x => x?.inventory)
@@ -128,10 +137,31 @@ export class BagsService {
         )
       );
 
-      characters.forEach(character => 
-        this.equippedBags(character.name, character.bags ?? [])
-            .then(bags => this.addCharacter(character.name, character.profession, character.level, bags))
-      );
+      // search for equipped bags and equipped jadebot components on each character
+      for (const character of characters) {
+        const bags = await this.equippedBags(character.name, character.bags ?? []);
+
+        var powerCore: DisplaybeItem|null = null;
+        var sensoryArray: DisplaybeItem|null = null;
+        var serviceChip: DisplaybeItem|null = null;
+
+        for (const equippedItem of character.equipment) {
+          switch(equippedItem.slot) {
+            case 'PowerCore':
+              powerCore = this.itemResponseToDisplayableItem(await this.lookupItemId(equippedItem.id));
+              break;
+            case 'SensoryArray':
+              sensoryArray = this.itemResponseToDisplayableItem(await this.lookupItemId(equippedItem.id));
+              break;
+            case 'ServiceChip':
+              serviceChip = this.itemResponseToDisplayableItem(await this.lookupItemId(equippedItem.id));
+              break;
+            default:
+          }
+        }
+
+        this.addCharacter(character.name, character.profession, character.level, bags, powerCore, sensoryArray, serviceChip);
+      }
     }
   }
 
@@ -180,6 +210,19 @@ export class BagsService {
     }
   }
 
+  private itemResponseToDisplayableItem(item: ItemResponse | undefined): DisplaybeItem|null {
+    if (item === undefined)
+      return null;
+
+    return {
+      itemId: item.id,
+      name: item.name,
+      desciption: item.description,
+      chatLink: item.chat_link,
+      icon: item.icon
+    }
+  }
+
   private equippedBagToInventoryBag(bag: Bag, characterName: string, bagInfo: ItemResponse|undefined): InventoryBag {
     return {
       itemId: bag.id,
@@ -206,6 +249,14 @@ export class BagsService {
         return true;
     }
     return false;
+  }
+
+  private async lookupItemId(id: number): Promise<ItemResponse|undefined> {
+    const item = await this.lookupItemIds([id]);
+    if (item.length === 1)
+      return item[0]
+    else
+      return undefined;
   }
 
   /**
@@ -242,10 +293,10 @@ export class BagsService {
     ]);
   }
 
-  private addCharacter(name: string, profession: string, level: number, equippedBags: (InventoryBag | null)[]) {
+  private addCharacter(name: string, profession: string, level: number, equippedBags: (InventoryBag | null)[], jadebotPowerCore: DisplaybeItem|null, jadebotSensoryArray: DisplaybeItem|null, jadebotServiceChip: DisplaybeItem|null) {
     this.characters.update(old => [
       ...old,
-      new MyCharacterInfo(name, profession, level, equippedBags)
+      new MyCharacterInfo(name, profession, level, equippedBags, jadebotPowerCore, jadebotSensoryArray, jadebotServiceChip)
     ]);
   }
 }

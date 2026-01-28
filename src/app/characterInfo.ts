@@ -1,10 +1,14 @@
+import { DisplaybeItem } from "./displayableItem";
 import { InventoryBag } from "./inventoryBag";
 
 export interface CharacterInfo {
     name: string;
     profession: string;
     level: number;
-    equippedBags: (InventoryBag|null)[];
+    equippedBags: (InventoryBag | null)[];
+    jadebotPowerCore: DisplaybeItem | null;
+    jadebotSensoryArray: DisplaybeItem | null;
+    jadebotServiceChip: DisplaybeItem | null;
     totalInventorySlots: () => number;
     usedInventorySlots: () => number;
 }
@@ -14,7 +18,10 @@ export class MyCharacterInfo implements CharacterInfo {
         public name: string,
         public profession: string,
         public level: number,
-        public equippedBags: (InventoryBag|null)[]
+        public equippedBags: (InventoryBag|null)[],
+        public jadebotPowerCore: DisplaybeItem | null,
+        public jadebotSensoryArray: DisplaybeItem | null,
+        public jadebotServiceChip: DisplaybeItem | null
     ) {}
 
     totalInventorySlots(): number {

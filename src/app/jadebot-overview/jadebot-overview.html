@@ -1,0 +1,7 @@
+Chars:
+@for(character of characterService.getCharacters(); track $index) {
+    {{ character.name }}
+    {{ character.jadebotPowerCore?.name }}
+    {{ character.jadebotSensoryArray?.name }}
+    {{ character.jadebotServiceChip?.name }}
+}

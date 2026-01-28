@@ -12,6 +12,13 @@ export class ApiKeyService {
   private accessToken = signal('');
   private permissions: WritableSignal<string[]> = signal([]);
 
+  constructor()  {
+    const accessToken = localStorage.getItem('apiKey');
+    if (accessToken != null) {
+      this.setGW2ApiAccessToken(accessToken);
+    }
+  }
+
   public apiAccessToken(): string { return this.accessToken() }
   public apiPermissions(): string[] { return this.permissions() }
 
