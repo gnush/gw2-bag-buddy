@@ -1,0 +1,17 @@
+.item-icon {
+    height: 64px;
+    width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+div.item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+div.item > div {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}

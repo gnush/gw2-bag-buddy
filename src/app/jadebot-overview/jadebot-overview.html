@@ -1,7 +1,38 @@
-Chars:
-@for(character of characterService.getCharacters(); track $index) {
-    {{ character.name }}
-    {{ character.jadebotPowerCore?.name }}
-    {{ character.jadebotSensoryArray?.name }}
-    {{ character.jadebotServiceChip?.name }}
-}
+<table>
+    <thead>
+        <tr>
+            <th>Character</th>
+            <th>Power Core</th>
+            <th>Sensory Array</th>
+            <th>Service Chip</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for(character of characterService.getCharacters(); track $index) {
+            <tr>
+                <td>{{ character.name }}</td>
+                <td>
+                    @if (character.jadebotPowerCore !== null) {
+                        <app-item-display [item]="character.jadebotPowerCore" [iconSizePx]="64"/>
+                    } @else {
+                        <app-empty-item-display [iconSizePx]="64" />
+                    }
+                </td>
+                <td>
+                    @if (character.jadebotSensoryArray !== null) {
+                        <app-item-display [item]="character.jadebotSensoryArray" [iconSizePx]="64"/>
+                    } @else {
+                        <app-empty-item-display [iconSizePx]="64" />
+                    }
+                </td>
+                <td>
+                    @if (character.jadebotServiceChip !== null) {
+                        <app-item-display [item]="character.jadebotServiceChip" [iconSizePx]="64"/>
+                    } @else {
+                        <app-empty-item-display [iconSizePx]="64" />
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

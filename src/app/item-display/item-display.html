@@ -1,0 +1,12 @@
+<div class="item">
+<div>{{item().name}}</div>
+<div>
+<img
+    class="item-icon"
+    [style.height]="iconSizePx()+'px'"
+    [src]="item().icon"
+    alt="Icon of {{item().name}}"
+/>
+</div>
+<div>{{ item().desciption }}</div>
+</div>

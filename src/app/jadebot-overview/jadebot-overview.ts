@@ -1,9 +1,11 @@
 import { Component, effect, inject } from "@angular/core";
 import { BagsService } from "../bags.service";
+import { ItemDisplay } from "../item-display/item-display";
+import { EmptyItemDisplay } from "../empty-item-display/empty-item-display";
 
 @Component({
   selector: 'app-jadebot-overview',
-  imports: [],
+  imports: [ItemDisplay, EmptyItemDisplay],
   templateUrl: './jadebot-overview.html',
   styleUrl: './jadebot-overview.css'
 })
