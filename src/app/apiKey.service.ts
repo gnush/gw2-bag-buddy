@@ -53,4 +53,10 @@ export class ApiKeyService {
 
     return false;
   }
+
+  public removeGW2ApiAccessToken() {
+    localStorage.removeItem('apiKey');
+    this.accessToken.set('');
+    this.permissions.set([]);
+  }
 }
