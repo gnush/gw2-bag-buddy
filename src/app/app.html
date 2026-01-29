@@ -1,9 +1,17 @@
 <main>
-  <a [routerLink]="['/']">
     <header>
-      {{ title() }}
+      <a [routerLink]="['/']">{{ title() }}</a>
+
+      @if (isGithubPage()) {
+        <a [routerLink]="['/']" [queryParams]="{route:'bags'}">Bags</a>
+        <a [routerLink]="['/']" [queryParams]="{route:'jadebot'}">Jadebot</a>
+        <a [routerLink]="['/']" [queryParams]="{route:'apikey'}">Api Key</a>
+      } @else {
+        <a [routerLink]="['/bags']">Bags</a>
+        <a [routerLink]="['/jadebot']">Jadebot</a>
+        <a [routerLink]="['/apikey']">Api Key</a>
+      }
     </header>
-  </a>
   <section class="content">
     <router-outlet />
   </section>

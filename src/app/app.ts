@@ -8,5 +8,9 @@ import { RouterLink, RouterOutlet } from '@angular/router';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('Guild Wars 2 Bag Buddy');
+  protected readonly title = signal('Guild Wars 2 Character Buddy');
+
+  isGithubPage(): boolean {
+    return window.location.host.includes('github.io');
+  }
 }

@@ -43,12 +43,8 @@ input[type="text"] {
 }
 
 div.form {
+  margin-top: 16px;
   display: flex;
   flex-direction: row;
-  align-items: center;
-}
-
-div.form > div {
-  width: auto;
-  margin: 2px;
+  gap: 8px;
 }

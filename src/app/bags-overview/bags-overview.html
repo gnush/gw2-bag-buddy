@@ -1,27 +1,3 @@
-<section>
-  <form [formGroup]="apiKeyForm" (ngSubmit)="applyApiKey()">
-    <!-- <button (click)="toggleApiKeyInfo()">&#8505;</button> TODO: excempt from submit, without moving out of form (forces newline) -->
-    <span class="button" (click)="toggleApiKeyInfo()">&#8505;</span>
-    <input type="text" placeholder="API Key" formControlName="apiKey"/>
-    <button type="submit" class="button" [disabled]="!apiKeyForm.valid || apiKeyForm.value.apiKey === apiKeyService.apiAccessToken()">Apply</button>
-  </form>
-  @if(showApiKeyInfo) {
-    <p>
-      Unsure what an API key is or how to create one?<br>
-      <a href="https://wiki.guildwars2.com/wiki/API:API_key">https://wiki.guildwars2.com/wiki/API:API_key</a>
-    </p>
-    <p>
-      Required permissions:
-      @for(permission of apiKeyService.requiredApiKeyPermissions; track $index) {
-        @if(!apiKeyService.apiPermissions().includes(permission)) {
-          <span class="permissionMissing">{{permission}}</span>
-        } @else {
-          <span class="permission">{{permission}}</span>
-        }
-      }
-    </p>
-  }
-</section>
 <section class="row">
   <div>
     <table>
@@ -66,7 +42,7 @@
       }
     </div>
   </div>
-  <div>
+  <!-- <div>
     <p>Placeholder for available Bag Slot Expansions</p>
-  </div>
+  </div> -->
 </section>

@@ -12,7 +12,6 @@ import { EmptyItemDisplay } from "../empty-item-display/empty-item-display";
 export class JadebotOverview {
   characterService = inject(BagsService);
   constructor() {
-    // TODO: apply this to bags overview as well (after moving the api key form)
     effect(() => this.characterService.repopulateEquippedBagsAndJadebotComponents());
   }
 }

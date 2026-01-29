@@ -1,0 +1,13 @@
+@if (routeParam.toLowerCase() === 'apikey') {
+    <app-api-key-settings />
+} @else if (routeParam.toLowerCase() === 'bags') {
+    <app-bags-overview />
+} @else if (routeParam.toLowerCase() == 'jadebot') {
+    <app-jadebot-overview />
+} @else {
+    @if(apiKeyService.apiAccessToken() === '') {
+        <app-api-key-settings />
+    } @else {
+        <app-bags-overview />
+    }
+}
