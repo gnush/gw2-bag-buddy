@@ -3,6 +3,7 @@ import { BagsService} from '../bags.service';
 import { EquippedBag } from '../equipped-bag/equipped-bag';
 import { UnusedBag } from '../unused-bag/unused-bag';
 import { EmptyBagSlot } from '../empty-bag-slot/empty-bag-slot';
+import { CharacterDisplay } from '../character-display/character-display';
 
 // TODO:
 //   - split char table and unused bags to new components
@@ -10,7 +11,7 @@ import { EmptyBagSlot } from '../empty-bag-slot/empty-bag-slot';
 //   - api key input form as it's own page
 @Component({
   selector: 'app-bags-overview',
-  imports: [EmptyBagSlot, EquippedBag, UnusedBag],
+  imports: [CharacterDisplay, EmptyBagSlot, EquippedBag, UnusedBag],
   templateUrl: './bags-overview.html',
   styleUrl: './bags-overview.css',
 })

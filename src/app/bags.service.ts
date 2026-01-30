@@ -160,7 +160,13 @@ export class BagsService {
           }
         }
 
-        this.addCharacter(character.name, character.profession, character.level, bags, powerCore, sensoryArray, serviceChip);
+        this.addCharacter(
+          character.name, character.race, character.gender, character.profession, character.level,
+          bags,
+          powerCore,
+          sensoryArray,
+          serviceChip
+        );
       }
     }
   }
@@ -269,7 +275,6 @@ export class BagsService {
     const limit = 200;
 
     if (ids.length <= limit) {
-      // TODO: add localization support (&lang=de)
       return await (await fetch(`${this.gw2ApiBase}/items?ids=${ids}`)).json() ?? [];
     } else {
       const chunks = [...Array(Math.ceil(ids.length / limit))].map(_ => ids.splice(0, limit));
@@ -293,10 +298,26 @@ export class BagsService {
     ]);
   }
 
-  private addCharacter(name: string, profession: string, level: number, equippedBags: (InventoryBag | null)[], jadebotPowerCore: DisplaybeItem|null, jadebotSensoryArray: DisplaybeItem|null, jadebotServiceChip: DisplaybeItem|null) {
+  private addCharacter(
+    name: string,
+    race: string,
+    gender: string,
+    profession: string,
+    level: number,
+    equippedBags: (InventoryBag | null)[],
+    jadebotPowerCore: DisplaybeItem|null,
+    jadebotSensoryArray: DisplaybeItem|null,
+    jadebotServiceChip: DisplaybeItem|null
+  ) {
     this.characters.update(old => [
       ...old,
-      new MyCharacterInfo(name, profession, level, equippedBags, jadebotPowerCore, jadebotSensoryArray, jadebotServiceChip)
+      new MyCharacterInfo(
+        name, race, gender, profession, level,
+        equippedBags,
+        jadebotPowerCore,
+        jadebotSensoryArray,
+        jadebotServiceChip
+      )
     ]);
   }
 }

@@ -10,7 +10,14 @@
     <tbody>
         @for(character of characterService.getCharacters(); track $index) {
             <tr>
-                <td>{{ character.name }}</td>
+                <td>
+                    <app-character-display
+                        [name]="character.name"
+                        [level]="character.level"
+                        [race]="character.race"
+                        [profession]="character.profession"
+                    />
+                </td>
                 <td>
                     @if (character.jadebotPowerCore !== null) {
                         <app-item-display [item]="character.jadebotPowerCore" [iconSizePx]="64"/>

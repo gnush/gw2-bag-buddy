@@ -3,6 +3,8 @@ import { InventoryBag } from "./inventoryBag";
 
 export interface CharacterInfo {
     name: string;
+    race: string;
+    gender: string;
     profession: string;
     level: number;
     equippedBags: (InventoryBag | null)[];
@@ -16,6 +18,8 @@ export interface CharacterInfo {
 export class MyCharacterInfo implements CharacterInfo {
     constructor(
         public name: string,
+        public race: string,
+        public gender: string,
         public profession: string,
         public level: number,
         public equippedBags: (InventoryBag|null)[],

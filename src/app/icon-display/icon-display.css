@@ -1,0 +1,6 @@
+.icon {
+    height: 64px;
+    width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}

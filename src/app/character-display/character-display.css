@@ -1,0 +1,18 @@
+.character {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
